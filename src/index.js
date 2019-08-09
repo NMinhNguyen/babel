@@ -1,6 +1,10 @@
 import { declare } from "@babel/helper-plugin-utils";
 import { types as t } from "@babel/core";
 
+const forcedLoose = ["useReducer", "useState"].map(
+  name => new RegExp(`^_(?:React\\$)?${name}\\d*$`),
+);
+
 export default declare((api, options) => {
   api.assertVersion(7);
 
@@ -137,7 +141,9 @@ export default declare((api, options) => {
     toArray(node, count) {
       if (
         this.arrayOnlySpread ||
-        (t.isIdentifier(node) && this.arrays[node.name])
+        (t.isIdentifier(node) &&
+          (this.arrays[node.name] ||
+            forcedLoose.some(regex => regex.test(node.name))))
       ) {
         return node;
       } else {
